@@ -31,7 +31,7 @@ test = [
   "numpy",
   "cmake"
 ]
-dev = ["pre-commit", "deptry", { include-group = "test" }]
+dev = ["pre-commit", "deptry", "rust-just", { include-group = "test" }]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -65,6 +65,13 @@ manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 manylinux-pypy_x86_64-image = "manylinux_2_28"
 manylinux-pypy_aarch64-image = "manylinux_2_28"
+
+[tool.uv]
+fork-strategy = "requires-python"
+exclude-newer = "7 days"
+
+[tool.uv.exclude-newer-package]
+xtgeo = false # Developed by Equinor
 
 [tool.ruff]
 target-version = "py312"

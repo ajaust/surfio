@@ -11,6 +11,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  UV_FROZEN: true
+
 jobs:
   build:
     name: Python ${{ matrix.python[0] }} on ${{ matrix.os_arch[0] }}-${{ matrix.os_arch[1] }}
@@ -37,13 +40,10 @@ jobs:
           fetch-depth: 0
           submodules: True
 
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-        with:
-          python-version: ${{ matrix.python[0] }}
-
       - name: Install uv
         uses: astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3 # v8.3.0
+        with:
+          enable-cache: false # Avoids cache poisoning
 
       - name: Configure compiler vars [macos]
         if: ${{ contains(runner.os, 'macos') }}
@@ -55,14 +55,13 @@ jobs:
           echo "RANLIB=gcc-ranlib-14" >> $GITHUB_ENV
           echo "MACOSX_DEPLOYMENT_TARGET=26.0" >> $GITHUB_ENV
 
-      - name: Install cibuildwheel
-        run: python -m pip install -U pip wheel cibuildwheel twine
-
-      - name: Run cibuildwheel
-        run: cibuildwheel --output-dir wheelhouse
+      - name: Build wheels
+        uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
+        with:
+          extras: "uv"
 
       - name: Check metadata
-        run: twine check wheelhouse/*
+        run: uvx twine check wheelhouse/*
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
@@ -85,7 +84,7 @@ jobs:
           path: wheelhouse
           merge-multiple: true
 
-      - uses:  pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+      - uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
         with:
           skip-existing: true
           packages-dir: wheelhouse
