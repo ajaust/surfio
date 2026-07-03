@@ -61,32 +61,55 @@ with open("./file.irap", mode="w") as f:
 
 ## Development
 
+We use [uv](https://docs.astral.sh/uv/) to manage the development environment
+and its dependencies. See [installing uv](https://docs.astral.sh/uv/getting-started/installation/).
+We recommend installing uv using your system's package manager, or into a
+small dedicated virtual environment.
+
+Once uv is installed, you can get a development environment by running:
+
 ```bash
-pip install -e ".[dev]"
+git clone https://github.com/equinor/surfio
+cd surfio
+uv sync --all-groups
 ```
 
-Style is enforced via pre-commit:
+This builds the C++ extension and installs surfio, together with its test and
+development dependencies, into a `.venv`.
+
+We use [just](https://github.com/casey/just) as a command runner for common
+development tasks. The most useful recipes are:
 
 ```bash
-pre-commit install
+uv run just build-python   # (Re)build and install the surfio python package
+uv run just test           # Run both the C++ and python test suites
+uv run just test-python    # Run only the python test suite
+uv run just lint           # Run all linters/formatters via pre-commit
+```
+
+Style is enforced via pre-commit. To have it run automatically on each
+commit:
+
+```bash
+uv run just install-pre-commit-hooks
 ```
 
 ## C++ development
 
-To configure the project
+The C++ project can also be configured, built and tested independently of
+building/installing the Python package, using `just`:
+
+```bash
+uv run just configure-cpp
+uv run just build-cpp
+uv run just test-cpp
+```
+
+which is equivalent to running the underlying `cmake`/`ctest` commands
+directly, e.g.
 
 ```bash
 cmake --preset release-posix
-```
-
-To build it
-
-```bash
 cmake --build --preset release-posix
-```
-
-To test it
-
-```bash
-ctest --preset release-posix
+ctest --preset test-posix
 ```
